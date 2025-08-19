@@ -1,24 +1,23 @@
-#include <stdio.h>
-#include "input_parsar.h"
-#include "ethernet_header.h"
-#include "ip_header.h"
-#include "payload_data.h"
+#include "stdio.h"
+#include "ethernet.h"
+#include "ip.h"
+#include "payload.h"
+#include "input_packet.h"
 
-
-unsigned char packet_length = sizeof(packet);
+unsigned char protocol_checker(unsigned char *arry, unsigned char length);
 
 int main() {
+    printf("Starting Packet Parser...\n");
+    
+    unsigned char type = 0;
     unsigned char state = 0;
-    unsigned char ipv = 0;
-    if(packet[12] == 0x08 && packet[13] == 0x00) {
-        state = 1; // Ethernet header
-        ipv = 4;
-    } else if(packet[12] == 0x86 && packet[13] == 0xDD) {
-        state = 2; // Ethernet header for IPv6
-        ipv = 6;
-    }
-
-    if(ipv == 4 || ipv == 6){
+    type = protocol_checker(packet, packet_length);
+    printf("type is checked\n");
+    if(type == IPV_4) { state =1;}
+    else if(type == IPV_6) { state =2;}
+    else { state = -1; }
+    printf("state is selected\n");
+    
             switch(state) {
 
             case 0:
@@ -35,14 +34,24 @@ int main() {
                 payload();
                 break;
             default:
-                printf("unsupported IP.\n");
+                printf("2nd layer is not IPV4 nor IPV6\n");
+                printf("unsupported IP in Packet.\n");
             }
-    }
-
-    
-
-   
     
     return 0;
 }
 
+unsigned char protocol_checker(unsigned char arry[], unsigned char length) {
+    unsigned char type = 0;
+    for(int i = 0; i < length; i++) {
+        if(arry[i] == 0x08 && arry[i+1] == 0x00) {
+            // printf("Ether Type is IPv4.\n");
+            type = 4; // IPv4
+        }
+        if(arry[i] == 0x86 && arry[i+1] == 0xDD) {
+            // printf("Ether Type is IPv6.\n");
+            type = 6; // IPv6
+        }
+    }
+    return type;
+}
